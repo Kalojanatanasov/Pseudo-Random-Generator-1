@@ -1,0 +1,127 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+//using System.Text.Encoding;
+using System.Threading.Tasks;
+using System.IO;
+using System.Windows.Forms;
+
+namespace ConsoleApplication1
+{
+    class Program
+    {
+        public static string path = @"absolute location";
+        static private string cipher = "chiphering sequence";
+        static void Main(string[] args)
+        {
+            List<KeyValuePair<string, int>> properties = new List<KeyValuePair<string, int>>();
+            List<KeyValuePair<string, int>> propertiesHelping = new List<KeyValuePair<string, int>>();
+            List<string> lines = new List<string>();
+            string line;
+            int numberOfLines, i = 0;
+            if (File.Exists(path) == false)
+            {
+                //read file into string
+                GenerateInitialFile(properties);
+            }
+            using (StreamReader sr = new StreamReader(path, Encoding.UTF8))
+            {
+                while ((line = sr.ReadLine()) != null)
+                {
+                    string decodedSequence = CodeString(line);                    
+                    line = decodedSequence;
+                    lines.Add(line);                    
+                }
+                numberOfLines = lines.Count;                
+                // revert lines to Keyvaluepair + conversation in int
+                for (i = 0; i < numberOfLines; i = i + 2)
+                {
+                    int temp = int.Parse(lines[i + 1]);
+                    properties.Add(new KeyValuePair<string, int>(lines[i], temp));
+                }
+            }         
+
+            //sorting to the smallest inc.
+            properties = properties.OrderByDescending(x => x.Value).ToList();
+            numberOfLines = properties.Count;
+            for (i = 0; i < numberOfLines; i++)
+            {
+                if (i == numberOfLines - 1)
+                {
+                    string str = properties[i].Key;
+                    int incidents = properties[i].Value;
+                    propertiesHelping.Add(new KeyValuePair<string, int>(str, incidents + 1));
+                    MessageBox.Show(str + " must receive assingment");
+                    break;
+                }
+                string str1 = properties[i].Key;
+                int incidents1 = properties[i].Value;
+                propertiesHelping.Add(new KeyValuePair<string, int>(str1, incidents1));
+            }
+            //remove old value
+            properties = new List<KeyValuePair<string, int>>();
+
+            for (i = 0; i < numberOfLines; i++)
+            {
+                string str1 = propertiesHelping[i].Key;
+                int incidents1 = propertiesHelping[i].Value;
+                properties.Add(new KeyValuePair<string, int>(str1, incidents1));            
+            }            
+            if (File.Exists(path))
+            {
+                //delete for fix the bug with buffer
+                File.Delete(path);
+            }
+            using (StreamWriter wr = new StreamWriter(path))
+            { 
+                AppendLinesInTXTFile(wr, properties);
+            }        
+        }
+
+        
+        private static void GenerateInitialFile(List<KeyValuePair<string, int>> properties)
+        {
+            using (StreamWriter w = new StreamWriter(path))
+            {
+                //hardcode team members
+                properties.Add(new KeyValuePair<string, int>("xxxxx", 0));
+                properties.Add(new KeyValuePair<string, int>("yyyyy", 0));
+                properties.Add(new KeyValuePair<string, int>("zzzzz", 0));
+                properties.Add(new KeyValuePair<string, int>("aaaaa", 0));
+                // ----- // ---- // ----- // ----- // -------- // -------
+                properties.Add(new KeyValuePair<string, int>("sssss", 0));
+                AppendLinesInTXTFile(w, properties);                
+            }  
+        }
+
+        private static void AppendLinesInTXTFile(StreamWriter w, List<KeyValuePair<string, int>> properties)
+        {
+            //coding the string
+            foreach (KeyValuePair<string, int> item in properties)
+            {
+                string sequenceForCode = item.Key;
+                string codedSequence = CodeString(sequenceForCode);
+                w.WriteLine(codedSequence);
+                sequenceForCode = item.Value.ToString();
+                codedSequence = CodeString(sequenceForCode);
+                w.WriteLine(codedSequence);
+            }
+        }
+        static private string CodeString(string text)
+        {
+            char[] result = new char[text.Length];
+            //coding sequence 
+            for (int i = 0; i < text.Length; i++)
+            {
+                result[i] = (char)(text[i] ^ cipher[i % cipher.Length]);
+            }
+            return new string(result);
+        }
+
+        static private string DecodeString(string text)
+        {
+            return CodeString(text);
+        }
+    }
+}
